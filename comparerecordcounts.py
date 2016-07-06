@@ -137,29 +137,41 @@ def analyze():
         if args_in.verbose:
             print string
 
-    conx = mysql.connector.connect(user = 'reader', password = passwd, host = 'gratiadb03.fnal.gov', database = 'gratia') 
-    client = Elasticsearch(['https://gracc.opensciencegrid.org/e'],use_ssl=True,verify_certs=True,ca_certs = certifi.where(),client_cert='gracc_cert/gracc-reports-dev.crt',client_key='gracc_cert/gracc-reports-dev.key',timeout=60)   
+    #Connection to GRATIA db
+    conx = mysql.connector.connect(user = 'reader', 
+                                   password = passwd, 
+                                   host = 'gratiadb03.fnal.gov',
+                                   database = 'gratia') 
+    
+    #Elasticsearch client for GRACC
+    client = Elasticsearch(['https://gracc.opensciencegrid.org/e'],
+                           use_ssl=True,
+                           verify_certs=True,
+                           ca_certs = certifi.where(),
+                           client_cert='gracc_cert/gracc-reports-dev.crt',
+                           client_key='gracc_cert/gracc-reports-dev.key',
+                           timeout=60)   
    
     datepointer = date_range[0] 
     while datepointer <= date_range[1]:
         sdate = datepointer
-        edate = sdate+datetime.timedelta(days=1)
+        edate = sdate + datetime.timedelta(days=1)
         
         if args_in.verbose:
             print 'Start Date for date range loop is {}'.format(sdate)
             gratiacount = gratiasearch(conx,sdate,True)
             graccq_count = graccquery(client,sdate,edate,True)
-            #gracc_count = graccsearch(client,sdate,True)
         else:
             gratiacount = gratiasearch(conx,sdate)
             graccq_count = graccquery(client,sdate,edate)
-            #gracc_count = graccsearch(client,sdate)
         
-        diff = graccq_count-gratiacount
-        percdiff= float(diff)/float(gratiacount)*100
+        diff = graccq_count - gratiacount
+        percdiff= float(diff)/float(gratiacount)
 
-        #outstr = '%s\t%s\t%d\t%d\t%d\t%d\t%.4f%%\n' %(sdate,edate,gratiacount,graccq_count,graccq_count,diff,percdiff)      #Testing when using graccquery function
-        outstr = '%s\t%s\t%d\t%d\t%d\t%.4f%%\n' %(sdate,edate,gratiacount,graccq_count,diff,percdiff)
+        # Note:  The next line automatically converts the quotient percdiff into a percentage 
+        # which is why there's no extra multiply-by-100.
+        outstr = '{}\t{}\t{}\t{}\t{}\t{:.4%}\n'.format(sdate,edate,gratiacount,graccq_count,diff,percdiff)
+        
         if args_in.verbose:
             print outstr
 
