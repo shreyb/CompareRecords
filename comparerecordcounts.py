@@ -110,8 +110,7 @@ def file_initialize(writefile, backupfile, verbose=False):
     # If the writefile exists and was the result of a successful run, back it up
     if path.exists(writefile):
         with open(writefile,'r') as f:
-            lines = f.readlines()
-            if lines[len(lines)-1] == "Success":
+            if f.readlines()[-1] == "Success": 
                 rename(writefile,backupfile)
                 if verbose:
                     print "Backed up old output file."
