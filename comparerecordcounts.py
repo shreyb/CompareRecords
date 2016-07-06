@@ -61,8 +61,8 @@ def graccquery(client,starttime,endtime,verbose=False):
     indexpattern=indexpattern_generate(starttime,endtime)
    
     if verbose:
-        print "Date range = {} - {}".format(start_date,end_date)
-    
+        print "Date range used for GRACC is {} - {}".format(start_date,end_date)
+         
     s = Search(using=client,index=indexpattern)
     s = s.filter('range',EndTime={"gte":start_date,"lt":end_date})
     
@@ -105,7 +105,6 @@ def date_parse(date_string):
 
 def file_initialize(writefile,backupfile,verbose=False):
     """Initialize our files"""
-
     # If the writefile exists and was the result of a successful run, back it up
     if path.exists(writefile):
         with open(writefile,'r') as f:
@@ -135,7 +134,6 @@ def analyze():
     
 def main():    
     """Where a lot of the setting up and passing variables back and forth goes"""
-    
     # Set up logging
     logging.basicConfig(filename='example.log',level=logging.ERROR)
     logging.getLogger('elasticsearch.trace').addHandler(logging.StreamHandler())
@@ -145,7 +143,7 @@ def main():
     
     # Specify our files
     writefile, backupfile = 'runresults.out', 'runresults_BAK.out'
-    file_initialize(writefile,backupfile,args_in.verbose)
+    file_initialize(writefile, backupfile, args_in.verbose)
 
     # Ask for the password if we need to
     if args_in.password == None:
@@ -156,7 +154,7 @@ def main():
     # Parse the dates that user gave us
     date_range = (date_parse(args_in.start),date_parse(args_in.end))
     if args_in.verbose:
-        print "Date range is '%s'-'%s'" % (args_in.start,args_in.end)
+        print "Script's Date range is {}-{}".format(args_in.start,args_in.end)
 
     #Connection to GRATIA db
     conx = mysql.connector.connect(user = 'reader', 
