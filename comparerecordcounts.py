@@ -6,6 +6,7 @@ import argparse
 import logging
 import certifi
 from getpass import getpass
+import sys
 
 import mysql.connector
 from elasticsearch import Elasticsearch
@@ -127,7 +128,19 @@ def file_initialize(writefile, backupfile, verbose=False):
         f.write('Datestamp: {}\n\n{}'.format(datetime.datetime.now(),header))
         if verbose:
             print header
+    return
+
+
+def file_cleanup(writefile, backupfile, verbose=False):
+    """Cleanup actions at the end of the script.  We flag the run as a success
+    and remove the backup file"""
+    with open(writefile,'a') as f:
+        f.write("\nSuccess")
     
+    if path.exists(backupfile):
+        remove(backupfile)
+        if verbose:
+            print "Removed backup file"
     return
     
     
@@ -206,16 +219,9 @@ def main():
             f.write(outstr)
     
         datepointer+=datetime.timedelta(days=1)
-
+    
     conx.close()
-    
-    with open(writefile,'a') as f:
-        f.write("\nSuccess")
-    
-    if path.exists(backupfile):
-        remove(backupfile)
-        if args_in.verbose:
-            print "Removed backup file"
+    file_cleanup(writefile, backupfile, args_in.verbose)
 
 
 if __name__ == '__main__':
