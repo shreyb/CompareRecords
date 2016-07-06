@@ -78,12 +78,12 @@ def graccquery(client, starttime, verbose=False):
 def args_parser():
     parser = argparse.ArgumentParser(description = 'Script to compare GRACC and GRATIA record counts by day')
     parser.add_argument('-s','--start',\
-                      help = 'Start Date in format yyyy-mm-dd',\
+                      help = 'Start Date in format yyyy-mm-dd (default is 31 days ago)',\
                       action = 'store',\
                       required = True,\
                       default = (datetime.date.today()-datetime.timedelta(days=31)).isoformat())
     parser.add_argument('-e','--end',\
-                      help = 'End Date in format yyyy-mm-dd',\
+                      help = 'End Date in format yyyy-mm-dd (default is yesterday)',\
                       action = 'store',\
                       required = True,\
                       default = (datetime.date.today()-datetime.timedelta(days=1)).isoformat())
