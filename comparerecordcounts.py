@@ -99,6 +99,7 @@ def args_parser():
     
 
 def date_parse(date_string):
+    """Parses date input by user in yyyy-mm-dd format and returns datetime.date object"""
     return datetime.date(*[int(elt) for elt in date_string.split('-')])
 
 
