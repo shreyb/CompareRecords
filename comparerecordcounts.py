@@ -93,6 +93,9 @@ def args_parser():
     parser.add_argument('-v','--verbose',\
                       help = 'Verbose',\
                       action = 'store_true')
+    parser.add_argument('-d','--debug',\
+                      help = 'Debug',\
+                      action = 'store_true')
                 
     return parser.parse_args()
     
@@ -162,12 +165,16 @@ def analyze(gratia_connection, gracc_client, testdate, verbose = False):
     
 def main():    
     """Main execution function."""
-    # Set up logging
-    logging.basicConfig(filename='example.log',level=logging.DEBUG)
-    logging.getLogger('elasticsearch.trace').addHandler(logging.StreamHandler())
-    
     # Grab our arguments
     args_in = args_parser()
+    
+    # Set up logging
+    if args_in.debug:
+        logging.basicConfig(filename='example.log',level=logging.DEBUG)
+    else:
+        logging.basicConfig(filename='example.log',level=logging.ERROR)
+    logging.getLogger('elasticsearch.trace').addHandler(logging.StreamHandler())
+    
     
     # Specify our files
     writefile, backupfile = 'runresults.out', 'runresults_BAK.out'
