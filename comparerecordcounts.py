@@ -64,7 +64,8 @@ def graccquery(client, starttime, verbose=False):
 
     if verbose:
         print "Date range used for GRACC is {} - {}".format(start_date,end_date)
-         
+        print "Index pattern used for search is {}".format(indexpattern)
+
     s = Search(using=client,index=indexpattern)
     s = s.filter('range',EndTime={"gte":start_date,"lt":end_date})
    
@@ -162,7 +163,7 @@ def analyze(gratia_connection, gracc_client, testdate, verbose = False):
 def main():    
     """Main execution function."""
     # Set up logging
-    logging.basicConfig(filename='example.log',level=logging.ERROR)
+    logging.basicConfig(filename='example.log',level=logging.DEBUG)
     logging.getLogger('elasticsearch.trace').addHandler(logging.StreamHandler())
     
     # Grab our arguments
@@ -181,7 +182,7 @@ def main():
     # Parse the dates that user gave us
     date_range = (date_parse(args_in.start),date_parse(args_in.end))
     if args_in.verbose:
-        print "Script's Date range is {}-{}".format(args_in.start,args_in.end)
+        print "Script's Date range is {} - {}".format(args_in.start,args_in.end)
 
     # Connection to GRATIA db
     conx = mysql.connector.connect(user = 'reader', 
