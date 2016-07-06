@@ -1,0 +1,16 @@
+# README FILE FOR SCRIPT COMPARING GRATIA AND GRACC COUNTS #
+
+Will build this up eventually
+
+
+
+Notes:
+* For security reasons, this git repo doesn't have the certs to authenticate to gracc.opensciencegrid.org in it.  You will need to get those certs (contact Kevin Retze or Shreyas Bhat)
+and put them in a folder called gracc_cert and put the folder in this directory.  The files the reporting script JobSuccessReport.py looks for are the pem file and the key file, which are
+specified in the script on the line that begins with "client=Elasticsearch"
+
+
+
+
+
+
