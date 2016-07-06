@@ -181,7 +181,7 @@ def main():
     # Parse the dates that user gave us
     date_range = (date_parse(args_in.start),date_parse(args_in.end))
     if args_in.verbose:
-        print "Script's Date range is {}-{}".format(args_in.start,args_in.end)
+        print "Script's Date range is {} - {}".format(args_in.start,args_in.end)
 
     # Connection to GRATIA db
     conx = mysql.connector.connect(user = 'reader', 
