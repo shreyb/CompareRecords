@@ -111,7 +111,9 @@ def analyze():
 
     args_in = args_parser()
     if args_in.password == None:
-        password = getpass("Please enter the password for the GRATIA database: ")
+        passwd = getpass("Please enter the password for the GRATIA database: ")
+    else:
+        passwd = args_in.password
 
     if args_in.verbose:
         print "Date range is '%s'-'%s'" % (args_in.start,args_in.end)
@@ -135,7 +137,7 @@ def analyze():
         if args_in.verbose:
             print string
 
-    conx = mysql.connector.connect(user = 'reader', password = password, host = 'gratiadb03.fnal.gov', database = 'gratia') 
+    conx = mysql.connector.connect(user = 'reader', password = passwd, host = 'gratiadb03.fnal.gov', database = 'gratia') 
     client = Elasticsearch(['https://gracc.opensciencegrid.org/e'],use_ssl=True,verify_certs=True,ca_certs = certifi.where(),client_cert='gracc_cert/gracc-reports-dev.crt',client_key='gracc_cert/gracc-reports-dev.key',timeout=60)   
    
     datepointer = date_range[0] 
