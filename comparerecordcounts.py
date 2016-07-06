@@ -103,7 +103,7 @@ def date_parse(date_string):
     return datetime.date(*[int(elt) for elt in date_string.split('-')])
 
 
-def file_initialize(writefile,backupfile,verbose=False):
+def file_initialize(writefile, backupfile, verbose=False):
     """Initialize our files"""
     # If the writefile exists and was the result of a successful run, back it up
     if path.exists(writefile):
@@ -127,9 +127,21 @@ def file_initialize(writefile,backupfile,verbose=False):
     
     
 
-def analyze():
+def analyze(gratia_connection, gracc_client, testdate, verbose = False):
     """Main analyzing function of our script that compares the record counts for GRACC and GRATIA, and returns those"""
-    pass
+    sdate = testdate 
+    edate = sdate + datetime.timedelta(days=1)
+    
+    if verbose:
+        print 'Start Date for date range loop is {}'.format(sdate)
+    
+    gratiacount = gratiasearch(gratia_connection, sdate, verbose)
+    graccq_count = graccquery(gracc_client, sdate, edate, verbose)
+    
+    diff = graccq_count - gratiacount
+    diffquotient = float(diff)/float(gratiacount)
+
+    return (sdate, edate, gratiacount, graccq_count, diff, diffquotient)
     
     
 def main():    
@@ -156,13 +168,13 @@ def main():
     if args_in.verbose:
         print "Script's Date range is {}-{}".format(args_in.start,args_in.end)
 
-    #Connection to GRATIA db
+    # Connection to GRATIA db
     conx = mysql.connector.connect(user = 'reader', 
                                    password = passwd, 
                                    host = 'gratiadb03.fnal.gov',
                                    database = 'gratia') 
     
-    #Elasticsearch client for GRACC
+    # Elasticsearch client for GRACC
     client = Elasticsearch(['https://gracc.opensciencegrid.org/e'],
                            use_ssl=True,
                            verify_certs=True,
@@ -171,25 +183,16 @@ def main():
                            client_key='gracc_cert/gracc-reports-dev.key',
                            timeout=60)   
    
+    
+    # Our main loop that analyzes GRACC and GRATIA
     datepointer = date_range[0] 
     while datepointer <= date_range[1]:
-        sdate = datepointer
-        edate = sdate + datetime.timedelta(days=1)
-        
-        if args_in.verbose:
-            print 'Start Date for date range loop is {}'.format(sdate)
-            gratiacount = gratiasearch(conx,sdate,True)
-            graccq_count = graccquery(client,sdate,edate,True)
-        else:
-            gratiacount = gratiasearch(conx,sdate)
-            graccq_count = graccquery(client,sdate,edate)
-        
-        diff = graccq_count - gratiacount
-        percdiff= float(diff)/float(gratiacount)
+        resultstring = analyze(conx, client, datepointer, args_in.verbose)
 
-        # Note:  The next line automatically converts the quotient percdiff into a percentage 
+        # Note:  The next line automatically converts the quotient diffquotient into a percentage 
         # which is why there's no extra multiply-by-100.
-        outstr = '{}\t{}\t{}\t{}\t{}\t{:.4%}\n'.format(sdate,edate,gratiacount,graccq_count,diff,percdiff)
+        
+        outstr = '{}\t{}\t{}\t{}\t{}\t{:.4%}\n'.format(*resultstring)
         
         if args_in.verbose:
             print outstr
