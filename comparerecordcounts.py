@@ -30,7 +30,7 @@ def gratiasearch(conn,starttime,verbose=False):
     cursor.execute(query,(starttime,endtime))
     
     if verbose:
-        print cursor.statement
+        print 'Query passed to GRATIA:\n{}'.format(cursor.statement)
     
     for sqlcount in cursor:
          count = sqlcount[0]
@@ -103,39 +103,60 @@ def date_parse(date_string):
     return datetime.date(*[int(elt) for elt in date_string.split('-')])
 
 
-def analyze():
-    writefile, backupfile = 'runresults.out', 'runresults_BAK.out'
+def file_initialize(writefile,backupfile,verbose=False):
+    """Initialize our files"""
 
-    logging.basicConfig(filename='example.log',level=logging.ERROR)
-    logging.getLogger('elasticsearch.trace').addHandler(logging.StreamHandler())
-
-    args_in = args_parser()
-    if args_in.password == None:
-        passwd = getpass("Please enter the password for the GRATIA database: ")
-    else:
-        passwd = args_in.password
-
-    if args_in.verbose:
-        print "Date range is '%s'-'%s'" % (args_in.start,args_in.end)
-   
-    date_range = (date_parse(args_in.start),date_parse(args_in.end))
-
+    # If the writefile exists and was the result of a successful run, back it up
     if path.exists(writefile):
         with open(writefile,'r') as f:
             lines = f.readlines()
             if lines[len(lines)-1] == "Success":
                 rename(writefile,backupfile)
-                if args_in.verbose:
+                if verbose:
                     print "Backed up old output file."
             else:
                 pass
 
+    # Put the header in our writefile
     with open(writefile,'w') as f:
-        f.write("Datestamp: %s\n\n"% datetime.datetime.now())
-        string = '{}\t{}\t{}\t{}\t{}\t{}\n'.format('Start Date','End Date','gratia_count','gracc_count','diff(gracc-gratia)','Percentage diff')
-        f.write(string)
-        if args_in.verbose:
-            print string
+        header  = '{}\t{}\t{}\t{}\t{}\t{}\n'.format('Start Date','End Date','gratia_count','gracc_count','diff(gracc-gratia)','Percentage diff')
+        f.write('Datestamp: {}\n\n{}'.format(datetime.datetime.now(),header))
+        if verbose:
+            print header
+    
+    return
+    
+    
+
+def analyze():
+    """Main analyzing function of our script that compares the record counts for GRACC and GRATIA, and returns those"""
+    pass
+    
+    
+def main():    
+    """Where a lot of the setting up and passing variables back and forth goes"""
+    
+    # Set up logging
+    logging.basicConfig(filename='example.log',level=logging.ERROR)
+    logging.getLogger('elasticsearch.trace').addHandler(logging.StreamHandler())
+    
+    # Grab our arguments
+    args_in = args_parser()
+    
+    # Specify our files
+    writefile, backupfile = 'runresults.out', 'runresults_BAK.out'
+    file_initialize(writefile,backupfile,args_in.verbose)
+
+    # Ask for the password if we need to
+    if args_in.password == None:
+        passwd = getpass("Please enter the password for the GRATIA database: ")
+    else:
+        passwd = args_in.password
+    
+    # Parse the dates that user gave us
+    date_range = (date_parse(args_in.start),date_parse(args_in.end))
+    if args_in.verbose:
+        print "Date range is '%s'-'%s'" % (args_in.start,args_in.end)
 
     #Connection to GRATIA db
     conx = mysql.connector.connect(user = 'reader', 
@@ -191,5 +212,5 @@ def analyze():
             print "Removed backup file"
 
 
-
-analyze()
+if __name__ == '__main__':
+    main()
