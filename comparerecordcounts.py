@@ -118,7 +118,12 @@ def file_initialize(writefile, backupfile, verbose=False):
 
     # Put the header in our writefile
     with open(writefile,'w') as f:
-        header  = '{}\t{}\t{}\t{}\t{}\t{}\n'.format('Start Date','End Date','gratia_count','gracc_count','diff(gracc-gratia)','Percentage diff')
+        header  = '{}\t{}\t{}\t{}\t{}\t{}\n'.format('Start Date',
+                                                    'End Date',
+                                                    'gratia_count',
+                                                    'gracc_count',
+                                                    'diff(gracc-gratia)',
+                                                    'Percentage diff')
         f.write('Datestamp: {}\n\n{}'.format(datetime.datetime.now(),header))
         if verbose:
             print header
@@ -128,7 +133,8 @@ def file_initialize(writefile, backupfile, verbose=False):
     
 
 def analyze(gratia_connection, gracc_client, testdate, verbose = False):
-    """Main analyzing function of our script that compares the record counts for GRACC and GRATIA, and returns those"""
+    """Main analyzing function of our script that compares the record counts 
+    for GRACC and GRATIA, and returns a tuple of the counts and the variances"""
     sdate = testdate 
     edate = sdate + datetime.timedelta(days=1)
     
@@ -145,7 +151,7 @@ def analyze(gratia_connection, gracc_client, testdate, verbose = False):
     
     
 def main():    
-    """Where a lot of the setting up and passing variables back and forth goes"""
+    """Main execution function."""
     # Set up logging
     logging.basicConfig(filename='example.log',level=logging.ERROR)
     logging.getLogger('elasticsearch.trace').addHandler(logging.StreamHandler())
@@ -191,7 +197,6 @@ def main():
 
         # Note:  The next line automatically converts the quotient diffquotient into a percentage 
         # which is why there's no extra multiply-by-100.
-        
         outstr = '{}\t{}\t{}\t{}\t{}\t{:.4%}\n'.format(*resultstring)
         
         if args_in.verbose:
