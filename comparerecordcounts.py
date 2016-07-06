@@ -6,7 +6,6 @@ import argparse
 import logging
 import certifi
 from getpass import getpass
-import sys
 
 import mysql.connector
 from elasticsearch import Elasticsearch
@@ -15,19 +14,18 @@ from elasticsearch_dsl import Search
 from indexpattern import indexpattern_generate 
 
 
-
 #Gratia
 def gratiasearch(conn,starttime,verbose=False):
+    """Function that queries GRATIA database and returns number of hits between
+    the specified start date and one day later"""
+    endtime=starttime+datetime.timedelta(days=1)
+    
     cursor=conn.cursor()
-
     query = ("SELECT COUNT(*) as sqlcount\
             FROM JobUsageRecord J INNER JOIN JobUsageRecord_Meta M on M.dbid=J.dbid\
             WHERE J.ENDTIME >= %s \
                 AND J.ENDTIME < %s\
             ;")
-
-    endtime=starttime+datetime.timedelta(days=1)
-    
     cursor.execute(query,(starttime,endtime))
     
     if verbose:
@@ -55,25 +53,25 @@ def gratiasearch(conn,starttime,verbose=False):
 
 
 #GRACC
-def graccquery(client,starttime,endtime,verbose=False):
+def graccquery(client, starttime, verbose=False):
+    """Function that queries GRACC database, returns number of hits between
+    the specified start date and one day later"""
+    endtime=starttime+datetime.timedelta(days=1)
+    indexpattern=indexpattern_generate(starttime,endtime)
     
     start_date = str(starttime.isoformat())
     end_date = str(endtime.isoformat())
-    indexpattern=indexpattern_generate(starttime,endtime)
-   
+
     if verbose:
         print "Date range used for GRACC is {} - {}".format(start_date,end_date)
          
     s = Search(using=client,index=indexpattern)
     s = s.filter('range',EndTime={"gte":start_date,"lt":end_date})
-    
-    query = s.to_dict()
-
-        
-
+   
+    if verbose:
+        print s.to_dict()
 
     response = s.execute()
-    
     return response.hits.total
 
 
@@ -143,7 +141,6 @@ def file_cleanup(writefile, backupfile, verbose=False):
             print "Removed backup file"
     return
     
-    
 
 def analyze(gratia_connection, gracc_client, testdate, verbose = False):
     """Main analyzing function of our script that compares the record counts 
@@ -155,12 +152,12 @@ def analyze(gratia_connection, gracc_client, testdate, verbose = False):
         print 'Start Date for date range loop is {}'.format(sdate)
     
     gratiacount = gratiasearch(gratia_connection, sdate, verbose)
-    graccq_count = graccquery(gracc_client, sdate, edate, verbose)
+    gracc_count = graccquery(gracc_client, sdate, verbose)
     
-    diff = graccq_count - gratiacount
+    diff = gracc_count - gratiacount
     diffquotient = float(diff)/float(gratiacount)
 
-    return (sdate, edate, gratiacount, graccq_count, diff, diffquotient)
+    return (sdate, edate, gratiacount, gracc_count, diff, diffquotient)
     
     
 def main():    
@@ -211,10 +208,9 @@ def main():
         # Note:  The next line automatically converts the quotient diffquotient into a percentage 
         # which is why there's no extra multiply-by-100.
         outstr = '{}\t{}\t{}\t{}\t{}\t{:.4%}\n'.format(*resultstring)
-        
         if args_in.verbose:
             print outstr
-
+        
         with open(writefile,'a') as f:
             f.write(outstr)
     
