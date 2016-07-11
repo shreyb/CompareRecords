@@ -198,6 +198,7 @@ def main():
     
     # Elasticsearch client for GRACC
     client = Elasticsearch(['https://gracc.opensciencegrid.org/e'],
+    #client = Elasticsearch(['https://fifemon-es.fnal.gov'],
                            use_ssl=True,
                            verify_certs=True,
                            ca_certs = certifi.where(),
