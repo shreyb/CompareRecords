@@ -1,0 +1,3 @@
+[submodule "IndexPattern"]
+	path = IndexPattern
+	url = https://github.com/shreyb/IndexPattern
