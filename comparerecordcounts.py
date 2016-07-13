@@ -36,22 +36,6 @@ def gratiasearch(conn,starttime,verbose=False):
 
     return count
 
-
-##GRACC - this block is deprecated in favor of graccquery
-#def graccsearch(client,indexdate,verbose=False):
-#    month_day = ['0' + str(elt) if len(str(elt)) == 1 else str(elt) for elt in (indexdate.month, indexdate.day)]
-#    indexyear = str(indexdate.year)
-#    index = 'gracc.osg.raw-{}.{}.{}'.format(indexyear,*month_day)
-#    
-#    if verbose:
-#        print "Index being searched is {}".format(index)
-#    
-#    countrecord = client.indices.stats(metric='docs')
-#    count = countrecord['indices'][index]['primaries']['docs']['count']
-#
-#    return count
-
-
 #GRACC
 def graccquery(client, starttime, verbose=False):
     """Function that queries GRACC database, returns number of hits between
@@ -76,28 +60,6 @@ def graccquery(client, starttime, verbose=False):
     return response.hits.total
 
 
-def args_parser():
-    parser = argparse.ArgumentParser(description = 'Script to compare GRACC and GRATIA record counts by day')
-    parser.add_argument('-s','--start',\
-                      help = 'Start Date in format yyyy-mm-dd (default is 31 days ago)',\
-                      action = 'store',\
-                      default = (datetime.date.today()-datetime.timedelta(days=31)).isoformat())
-    parser.add_argument('-e','--end',\
-                      help = 'End Date in format yyyy-mm-dd (default is yesterday)',\
-                      action = 'store',\
-                      default = (datetime.date.today()-datetime.timedelta(days=1)).isoformat())
-    parser.add_argument('-p','--password',\
-                      help = 'GRATIA DB password',\
-                      action = 'store',\
-                      default = None)
-    parser.add_argument('-v','--verbose',\
-                      help = 'Verbose',\
-                      action = 'store_true')
-    parser.add_argument('-d','--debug',\
-                      help = 'Debug',\
-                      action = 'store_true')
-                
-    return parser.parse_args()
     
 
 def date_parse(date_string):
@@ -144,7 +106,7 @@ def file_cleanup(writefile, backupfile, verbose=False):
     return
     
 
-def analyze(gratia_connection, gracc_client, testdate, verbose = False):
+def compare_record_counts_by_day(gratia_connection, gracc_client, testdate, verbose = False):
     """Main analyzing function of our script that compares the record counts 
     for GRACC and GRATIA, and returns a tuple of the counts and the variances"""
     sdate = testdate 
@@ -160,8 +122,32 @@ def analyze(gratia_connection, gracc_client, testdate, verbose = False):
     diffquotient = float(diff)/float(gratiacount)
 
     return (sdate, edate, gratiacount, gracc_count, diff, diffquotient)
-    
-    
+
+
+def args_parser():
+    parser = argparse.ArgumentParser(description = 'Script to compare GRACC and GRATIA record counts by day')
+    parser.add_argument('-s','--start',\
+                      help = 'Start Date in format yyyy-mm-dd (default is 31 days ago)',\
+                      action = 'store',\
+                      default = (datetime.date.today()-datetime.timedelta(days=31)).isoformat())
+    parser.add_argument('-e','--end',\
+                      help = 'End Date in format yyyy-mm-dd (default is yesterday)',\
+                      action = 'store',\
+                      default = (datetime.date.today()-datetime.timedelta(days=1)).isoformat())
+    parser.add_argument('-p','--password',\
+                      help = 'GRATIA DB password',\
+                      action = 'store',\
+                      default = None)
+    parser.add_argument('-v','--verbose',\
+                      help = 'Verbose',\
+                      action = 'store_true')
+    parser.add_argument('-d','--debug',\
+                      help = 'Debug',\
+                      action = 'store_true')
+                
+    return parser.parse_args()
+
+
 def main():    
     """Main execution function."""
     # Grab our arguments
@@ -174,17 +160,16 @@ def main():
         logging.basicConfig(filename='example.log',level=logging.ERROR)
     logging.getLogger('elasticsearch.trace').addHandler(logging.StreamHandler())
     
-    
-    # Specify our files
-    writefile, backupfile = 'runresults.out', 'runresults_BAK.out'
-    file_initialize(writefile, backupfile, args_in.verbose)
-
     # Ask for the password if we need to
     if args_in.password == None:
         passwd = getpass("Please enter the password for the GRATIA database: ")
     else:
         passwd = args_in.password
     
+    # Specify our files
+    writefile, backupfile = 'runresults.out', 'runresults_BAK.out'
+    file_initialize(writefile, backupfile, args_in.verbose)
+
     # Parse the dates that user gave us
     date_range = (date_parse(args_in.start),date_parse(args_in.end))
     if args_in.verbose:
@@ -209,7 +194,7 @@ def main():
     # Our main loop that analyzes GRACC and GRATIA
     datepointer = date_range[0] 
     while datepointer <= date_range[1]:
-        resultstring = analyze(conx, client, datepointer, args_in.verbose)
+        resultstring = compare_record_counts_by_day(conx, client, datepointer, args_in.verbose)
 
         # Note:  The next line automatically converts the quotient diffquotient into a percentage 
         # which is why there's no extra multiply-by-100.
