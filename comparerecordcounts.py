@@ -6,6 +6,7 @@ import argparse
 import logging
 import certifi
 from getpass import getpass
+import re
 
 import mysql.connector
 from elasticsearch import Elasticsearch
@@ -64,7 +65,7 @@ def graccquery(client, starttime, verbose=False):
 
 def date_parse(date_string):
     """Parses date input by user in yyyy-mm-dd format and returns datetime.date object"""
-    return datetime.date(*[int(elt) for elt in date_string.split('-')])
+    return datetime.date(*[int(elt) for elt in re.split('[/-]',date_string)])
 
 
 def file_initialize(writefile, backupfile, verbose=False):
@@ -166,14 +167,14 @@ def main():
     else:
         passwd = args_in.password
     
-    # Specify our files
-    writefile, backupfile = 'runresults.out', 'runresults_BAK.out'
-    file_initialize(writefile, backupfile, args_in.verbose)
-
     # Parse the dates that user gave us
     date_range = (date_parse(args_in.start),date_parse(args_in.end))
     if args_in.verbose:
         print "Script's Date range is {} - {}".format(args_in.start,args_in.end)
+    
+    # Specify our files
+    writefile, backupfile = 'runresults.out', 'runresults_BAK.out'
+    file_initialize(writefile, backupfile, args_in.verbose)
 
     # Connection to GRATIA db
     conx = mysql.connector.connect(user = 'reader', 
